@@ -1,0 +1,10 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Website Pertamaku</title>
+</head>
+<body>
+    <h1>Hello World!</h1>
+    <p>Ini website pertamaku di internet!</p>
+</body>
+</html>
