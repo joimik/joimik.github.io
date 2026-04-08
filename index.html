@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Visible Light – Electromagnetic Wave</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0a0a1a;
+      --card: #12122a;
+      --border: #2a2a4a;
+      --text: #e8e8ff;
+      --muted: #7878aa;
+      --accent: #6655ff;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    header {
+      text-align: center;
+      padding: 2.5rem 1rem 1.5rem;
+      background: linear-gradient(180deg, #0d0d2a 0%, transparent 100%);
+    }
+
+    header h1 {
+      font-size: clamp(1.6rem, 4vw, 2.8rem);
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      background: linear-gradient(90deg, #ff4466, #ff8844, #ffee00, #44ff88, #44aaff, #aa44ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    header p {
+      margin-top: 0.5rem;
+      color: var(--muted);
+      font-size: 1rem;
+    }
+
+    main {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 0 1rem 3rem;
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.5rem;
+    }
+
+    .card h2 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-size: 0.8rem;
+    }
+
+    /* ─── Wave canvas ─── */
+    #waveCanvas {
+      width: 100%;
+      height: 200px;
+      border-radius: 10px;
+      display: block;
+    }
+
+    /* ─── Spectrum bar ─── */
+    .spectrum-wrap {
+      position: relative;
+    }
+
+    #spectrumBar {
+      width: 100%;
+      height: 40px;
+      border-radius: 8px;
+      background: linear-gradient(
+        90deg,
+        #7b00ff 0%,
+        #4400ff 8%,
+        #0033ff 16%,
+        #0099ff 26%,
+        #00cccc 35%,
+        #00ee44 47%,
+        #88ff00 54%,
+        #ffff00 62%,
+        #ffaa00 74%,
+        #ff4400 86%,
+        #ff0000 100%
+      );
+      cursor: pointer;
+      position: relative;
+    }
+
+    #spectrumThumb {
+      position: absolute;
+      top: -6px;
+      width: 4px;
+      height: 52px;
+      background: white;
+      border-radius: 2px;
+      box-shadow: 0 0 8px rgba(255,255,255,0.9);
+      pointer-events: none;
+      transform: translateX(-50%);
+      transition: left 0.05s;
+    }
+
+    /* ─── Wavelength slider ─── */
+    .slider-row {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .slider-row label {
+      font-size: 0.85rem;
+      color: var(--muted);
+      white-space: nowrap;
+      min-width: 80px;
+    }
+
+    input[type=range] {
+      flex: 1;
+      -webkit-appearance: none;
+      height: 6px;
+      border-radius: 3px;
+      background: var(--border);
+      outline: none;
+      cursor: pointer;
+    }
+
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: white;
+      box-shadow: 0 0 8px rgba(255,255,255,0.6);
+      cursor: pointer;
+    }
+
+    input[type=range]::-moz-range-thumb {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: white;
+      border: none;
+      cursor: pointer;
+    }
+
+    /* ─── Stats grid ─── */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 1rem;
+    }
+
+    .stat-box {
+      background: #0e0e22;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1rem 1.2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+    }
+
+    .stat-box .label {
+      font-size: 0.72rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+    }
+
+    .stat-box .value {
+      font-size: 1.35rem;
+      font-weight: 700;
+      font-family: 'Courier New', monospace;
+    }
+
+    .stat-box .unit {
+      font-size: 0.72rem;
+      color: var(--muted);
+    }
+
+    /* ─── Color swatch ─── */
+    #colorSwatch {
+      width: 100%;
+      height: 100px;
+      border-radius: 10px;
+      transition: background 0.1s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #colorLabel {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: rgba(255,255,255,0.9);
+      text-shadow: 0 2px 8px rgba(0,0,0,0.7);
+    }
+
+    /* ─── EM Spectrum overview ─── */
+    .em-strip {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 4px;
+      font-size: 0.65rem;
+      text-align: center;
+    }
+
+    .em-band {
+      background: #0e0e22;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.6rem 0.3rem;
+      cursor: default;
+      transition: transform 0.15s, border-color 0.15s;
+    }
+
+    .em-band:hover { transform: translateY(-3px); border-color: var(--accent); }
+
+    .em-band .band-icon {
+      font-size: 1.3rem;
+      margin-bottom: 0.25rem;
+    }
+
+    .em-band .band-name {
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 0.2rem;
+    }
+
+    .em-band .band-range {
+      color: var(--muted);
+    }
+
+    .em-band.active-band {
+      border-color: white;
+      background: #1a1a3a;
+    }
+
+    /* ─── Wave equation ─── */
+    .equation-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+      align-items: flex-start;
+    }
+
+    .eq-box {
+      flex: 1;
+      min-width: 200px;
+      background: #0e0e22;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1rem 1.2rem;
+    }
+
+    .eq-box .eq-title {
+      font-size: 0.72rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      margin-bottom: 0.5rem;
+    }
+
+    .eq-box .eq-formula {
+      font-family: 'Courier New', monospace;
+      font-size: 1.05rem;
+      color: var(--text);
+    }
+
+    .eq-box .eq-formula span {
+      color: #88aaff;
+    }
+
+    .eq-box .eq-desc {
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-top: 0.4rem;
+      line-height: 1.5;
+    }
+
+    /* ─── Animation toggle ─── */
+    .controls-row {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 0.5rem 1.1rem;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: #1a1a3a;
+      color: var(--text);
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+    }
+
+    .btn:hover { background: #22224a; border-color: var(--accent); }
+    .btn.active { background: var(--accent); border-color: var(--accent); }
+
+    .speed-label {
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    @media (max-width: 520px) {
+      .em-strip { grid-template-columns: repeat(4, 1fr); }
+      .em-strip .em-band:nth-child(n+5) { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Visible Light</h1>
+  <p>An interactive exploration of electromagnetic waves</p>
+</header>
+
+<main>
+
+  <!-- Wave visualization -->
+  <div class="card">
+    <h2>Electromagnetic Wave</h2>
+    <canvas id="waveCanvas"></canvas>
+    <div class="controls-row" style="margin-top:1rem;">
+      <button class="btn active" id="toggleBtn">Pause</button>
+      <span class="speed-label">Speed:</span>
+      <input type="range" id="speedSlider" min="0.2" max="3" step="0.1" value="1" style="max-width:140px;">
+      <span class="speed-label" id="speedVal">1.0×</span>
+      <label style="margin-left:auto;display:flex;align-items:center;gap:0.4rem;font-size:0.85rem;color:var(--muted);cursor:pointer;">
+        <input type="checkbox" id="showB" checked style="accent-color:#aa44ff;"> B-field
+      </label>
+      <label style="display:flex;align-items:center;gap:0.4rem;font-size:0.85rem;color:var(--muted);cursor:pointer;">
+        <input type="checkbox" id="showArrows" checked style="accent-color:#44aaff;"> Arrows
+      </label>
+    </div>
+  </div>
+
+  <!-- Spectrum picker -->
+  <div class="card">
+    <h2>Explore the Visible Spectrum  <span style="color:var(--text);font-size:0.85rem;text-transform:none;letter-spacing:0;" id="nmLabel">550 nm</span></h2>
+    <div class="spectrum-wrap">
+      <div id="spectrumBar"><div id="spectrumThumb"></div></div>
+    </div>
+    <div class="slider-row">
+      <label>Wavelength</label>
+      <input type="range" id="wavelengthSlider" min="380" max="750" value="550" step="1">
+    </div>
+    <div style="margin-top:1rem;">
+      <div id="colorSwatch"><span id="colorLabel"></span></div>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="card">
+    <h2>Wave Properties</h2>
+    <div class="stats-grid">
+      <div class="stat-box">
+        <span class="label">Wavelength</span>
+        <span class="value" id="statWL">550</span>
+        <span class="unit">nanometres (nm)</span>
+      </div>
+      <div class="stat-box">
+        <span class="label">Frequency</span>
+        <span class="value" id="statFreq">5.45</span>
+        <span class="unit">× 10¹⁴ Hz</span>
+      </div>
+      <div class="stat-box">
+        <span class="label">Photon Energy</span>
+        <span class="value" id="statEnergy">2.25</span>
+        <span class="unit">eV</span>
+      </div>
+      <div class="stat-box">
+        <span class="label">Speed in vacuum</span>
+        <span class="value">299,792</span>
+        <span class="unit">km / s (c)</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- EM Spectrum overview -->
+  <div class="card">
+    <h2>The Electromagnetic Spectrum</h2>
+    <div class="em-strip" id="emStrip">
+      <div class="em-band" data-band="radio">
+        <div class="band-icon">📻</div>
+        <div class="band-name">Radio</div>
+        <div class="band-range">&gt; 1 mm</div>
+      </div>
+      <div class="em-band" data-band="microwave">
+        <div class="band-icon">📡</div>
+        <div class="band-name">Microwave</div>
+        <div class="band-range">1 mm–1 m</div>
+      </div>
+      <div class="em-band" data-band="infrared">
+        <div class="band-icon">🌡️</div>
+        <div class="band-name">Infrared</div>
+        <div class="band-range">700 nm–1 mm</div>
+      </div>
+      <div class="em-band active-band" data-band="visible">
+        <div class="band-icon">👁️</div>
+        <div class="band-name">Visible</div>
+        <div class="band-range">380–750 nm</div>
+      </div>
+      <div class="em-band" data-band="uv">
+        <div class="band-icon">☀️</div>
+        <div class="band-name">UV</div>
+        <div class="band-range">10–380 nm</div>
+      </div>
+      <div class="em-band" data-band="xray">
+        <div class="band-icon">🩻</div>
+        <div class="band-name">X-ray</div>
+        <div class="band-range">0.01–10 nm</div>
+      </div>
+      <div class="em-band" data-band="gamma">
+        <div class="band-icon">⚡</div>
+        <div class="band-name">Gamma</div>
+        <div class="band-range">&lt; 0.01 nm</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Equations -->
+  <div class="card">
+    <h2>Key Relationships</h2>
+    <div class="equation-row">
+      <div class="eq-box">
+        <div class="eq-title">Speed of light</div>
+        <div class="eq-formula"><span>c</span> = λ · f</div>
+        <div class="eq-desc">c = 3 × 10⁸ m/s &nbsp;·&nbsp; λ = wavelength &nbsp;·&nbsp; f = frequency</div>
+      </div>
+      <div class="eq-box">
+        <div class="eq-title">Photon energy (Planck)</div>
+        <div class="eq-formula"><span>E</span> = h · f = hc / λ</div>
+        <div class="eq-desc">h = 6.626 × 10⁻³⁴ J·s (Planck's constant)</div>
+      </div>
+      <div class="eq-box">
+        <div class="eq-title">Wave equation</div>
+        <div class="eq-formula"><span>E</span>(x,t) = E₀ sin(kx − ωt)</div>
+        <div class="eq-desc">k = 2π/λ &nbsp;·&nbsp; ω = 2πf &nbsp;·&nbsp; perpendicular B field oscillates in phase</div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<script>
+// ─────────────────────────────────────────────
+//  Wavelength → RGB  (approximate)
+// ─────────────────────────────────────────────
+function wavelengthToRGB(wl) {
+  let r, g, b;
+  if (wl >= 380 && wl < 440) {
+    r = -(wl - 440) / 60; g = 0; b = 1;
+  } else if (wl < 490) {
+    r = 0; g = (wl - 440) / 50; b = 1;
+  } else if (wl < 510) {
+    r = 0; g = 1; b = -(wl - 510) / 20;
+  } else if (wl < 580) {
+    r = (wl - 510) / 70; g = 1; b = 0;
+  } else if (wl < 645) {
+    r = 1; g = -(wl - 645) / 65; b = 0;
+  } else if (wl <= 750) {
+    r = 1; g = 0; b = 0;
+  } else {
+    r = 0; g = 0; b = 0;
+  }
+  // Intensity roll-off at edges
+  let factor;
+  if (wl >= 380 && wl < 420) factor = 0.3 + 0.7 * (wl - 380) / 40;
+  else if (wl >= 700 && wl <= 750) factor = 0.3 + 0.7 * (750 - wl) / 50;
+  else factor = 1;
+  return [
+    Math.round(255 * Math.pow(r * factor, 0.8)),
+    Math.round(255 * Math.pow(g * factor, 0.8)),
+    Math.round(255 * Math.pow(b * factor, 0.8))
+  ];
+}
+
+function rgbStr(r, g, b) { return `rgb(${r},${g},${b})`; }
+
+function colorName(wl) {
+  if (wl < 450) return 'Violet';
+  if (wl < 495) return 'Blue';
+  if (wl < 530) return 'Cyan / Green';
+  if (wl < 570) return 'Green';
+  if (wl < 590) return 'Yellow';
+  if (wl < 620) return 'Orange';
+  return 'Red';
+}
+
+// ─────────────────────────────────────────────
+//  State
+// ─────────────────────────────────────────────
+let wavelength = 550;
+let animating = true;
+let t = 0;
+let speed = 1;
+let showB = true;
+let showArrows = true;
+const C = 2.998e8; // m/s
+const h = 6.626e-34;
+const eV = 1.602e-19;
+
+// ─────────────────────────────────────────────
+//  Canvas wave
+// ─────────────────────────────────────────────
+const canvas = document.getElementById('waveCanvas');
+const ctx = canvas.getContext('2d');
+
+function resizeCanvas() {
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  canvas.width = rect.width * dpr;
+  canvas.height = rect.height * dpr;
+  ctx.scale(dpr, dpr);
+}
+
+function drawWave() {
+  const W = canvas.getBoundingClientRect().width;
+  const H = canvas.getBoundingClientRect().height;
+  ctx.clearRect(0, 0, W, H);
+
+  const [r, g, b] = wavelengthToRGB(wavelength);
+  const waveColor = rgbStr(r, g, b);
+  const bColor = `rgb(${Math.round(b * 0.6 + r * 0.2)},${Math.round(g * 0.2 + 100)},${Math.round(b * 0.6 + 200)})`;
+
+  const cy = H / 2;
+  const amp = H * 0.35;
+  const cycles = 3;
+  const k = (2 * Math.PI * cycles) / W;
+  const omega = k * speed;
+
+  // Axis
+  ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(0, cy); ctx.lineTo(W, cy); ctx.stroke();
+
+  // Labels
+  ctx.font = '11px Segoe UI';
+  ctx.fillStyle = 'rgba(255,255,255,0.35)';
+  ctx.fillText('E (electric field)', 8, cy - amp + 14);
+  if (showB) ctx.fillText('B (magnetic field)', 8, cy + amp - 4);
+  ctx.fillText('→ direction of propagation', W * 0.5, cy + H * 0.44);
+
+  const steps = Math.ceil(W);
+
+  // Draw E wave (vertical)
+  ctx.beginPath();
+  ctx.strokeStyle = waveColor;
+  ctx.lineWidth = 2.5;
+  ctx.shadowColor = waveColor;
+  ctx.shadowBlur = 8;
+  for (let x = 0; x <= W; x++) {
+    const y = cy - amp * Math.sin(k * x - omega * t);
+    x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+
+  // Draw B wave (horizontal — drawn as a 2D projection using dashed line)
+  if (showB) {
+    ctx.beginPath();
+    ctx.strokeStyle = `rgba(${Math.round(b * 0.3 + 100)},${Math.round(g * 0.2 + 80)},255,0.75)`;
+    ctx.lineWidth = 2;
+    ctx.setLineDash([6, 4]);
+    ctx.shadowColor = 'rgba(100,100,255,0.5)';
+    ctx.shadowBlur = 6;
+    for (let x = 0; x <= W; x++) {
+      const bAmp = amp * 0.6 * Math.sin(k * x - omega * t);
+      // Simulate depth: squish vertically, shift
+      const y = cy + bAmp * 0.35;
+      const xOff = bAmp * 0.2;
+      x === 0 ? ctx.moveTo(x + xOff, y) : ctx.lineTo(x + xOff, y);
+    }
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.shadowBlur = 0;
+  }
+
+  // Arrows along E wave
+  if (showArrows) {
+    const arrowSpacing = W / (cycles * 4);
+    ctx.strokeStyle = waveColor;
+    ctx.lineWidth = 1.5;
+    for (let x = arrowSpacing / 2; x < W; x += arrowSpacing) {
+      const y = cy - amp * Math.sin(k * x - omega * t);
+      const dy = y - cy;
+      drawArrow(ctx, cy, x, y, dy < 0 ? 'up' : 'down', waveColor);
+    }
+  }
+}
+
+function drawArrow(ctx, fromY, x, toY, dir, color) {
+  ctx.beginPath();
+  ctx.strokeStyle = color;
+  ctx.fillStyle = color;
+  ctx.lineWidth = 1.5;
+  const size = 6;
+  const mid = (fromY + toY) / 2;
+  ctx.moveTo(x, fromY);
+  ctx.lineTo(x, toY);
+  ctx.stroke();
+  // arrowhead
+  ctx.beginPath();
+  if (dir === 'up') {
+    ctx.moveTo(x, toY);
+    ctx.lineTo(x - size, toY + size * 1.5);
+    ctx.lineTo(x + size, toY + size * 1.5);
+  } else {
+    ctx.moveTo(x, toY);
+    ctx.lineTo(x - size, toY - size * 1.5);
+    ctx.lineTo(x + size, toY - size * 1.5);
+  }
+  ctx.closePath();
+  ctx.fill();
+}
+
+// ─────────────────────────────────────────────
+//  Update UI
+// ─────────────────────────────────────────────
+function updateAll() {
+  const wl = wavelength;
+  const [r, g, b] = wavelengthToRGB(wl);
+  const col = rgbStr(r, g, b);
+
+  // Swatch
+  document.getElementById('colorSwatch').style.background = col;
+  document.getElementById('colorLabel').textContent = colorName(wl);
+
+  // Stats
+  const freq = C / (wl * 1e-9);
+  const energy = (h * freq) / eV;
+  document.getElementById('statWL').textContent = wl;
+  document.getElementById('statFreq').textContent = (freq / 1e14).toFixed(2);
+  document.getElementById('statEnergy').textContent = energy.toFixed(2);
+  document.getElementById('nmLabel').textContent = wl + ' nm';
+
+  // Spectrum thumb position
+  const pct = (wl - 380) / (750 - 380);
+  document.getElementById('spectrumThumb').style.left = (pct * 100) + '%';
+
+  // Wavelength slider background
+  const slEl = document.getElementById('wavelengthSlider');
+  slEl.style.background = `linear-gradient(90deg, ${col} ${pct * 100}%, var(--border) ${pct * 100}%)`;
+}
+
+// ─────────────────────────────────────────────
+//  Animation loop
+// ─────────────────────────────────────────────
+function loop() {
+  if (animating) t += 0.04 * speed;
+  resizeCanvas();
+  drawWave();
+  requestAnimationFrame(loop);
+}
+
+// ─────────────────────────────────────────────
+//  Events
+// ─────────────────────────────────────────────
+const wlSlider = document.getElementById('wavelengthSlider');
+wlSlider.addEventListener('input', () => {
+  wavelength = +wlSlider.value;
+  updateAll();
+});
+
+// Click on spectrum bar
+const specBar = document.getElementById('spectrumBar');
+function handleSpectrumClick(e) {
+  const rect = specBar.getBoundingClientRect();
+  const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+  wavelength = Math.round(380 + pct * (750 - 380));
+  wlSlider.value = wavelength;
+  updateAll();
+}
+specBar.addEventListener('mousedown', handleSpectrumClick);
+specBar.addEventListener('mousemove', e => { if (e.buttons === 1) handleSpectrumClick(e); });
+specBar.addEventListener('touchstart', e => {
+  const t2 = e.touches[0];
+  const rect = specBar.getBoundingClientRect();
+  const pct = Math.max(0, Math.min(1, (t2.clientX - rect.left) / rect.width));
+  wavelength = Math.round(380 + pct * (750 - 380));
+  wlSlider.value = wavelength;
+  updateAll();
+}, { passive: true });
+
+// Toggle animation
+const toggleBtn = document.getElementById('toggleBtn');
+toggleBtn.addEventListener('click', () => {
+  animating = !animating;
+  toggleBtn.textContent = animating ? 'Pause' : 'Play';
+  toggleBtn.classList.toggle('active', animating);
+});
+
+// Speed
+const speedSlider = document.getElementById('speedSlider');
+speedSlider.addEventListener('input', () => {
+  speed = +speedSlider.value;
+  document.getElementById('speedVal').textContent = speed.toFixed(1) + '×';
+});
+
+// B-field toggle
+document.getElementById('showB').addEventListener('change', e => { showB = e.target.checked; });
+document.getElementById('showArrows').addEventListener('change', e => { showArrows = e.target.checked; });
+
+// Resize
+window.addEventListener('resize', () => { resizeCanvas(); drawWave(); });
+
+// ─────────────────────────────────────────────
+//  Init
+// ─────────────────────────────────────────────
+updateAll();
+loop();
+</script>
+</body>
+</html>
