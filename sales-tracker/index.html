@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>Sales Tracker</title>
+<meta name="description" content="Offline-first sales tracker: log sales, totals by product and payment method.">
+
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#f6f4fa" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1a1526" media="(prefers-color-scheme: dark)">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Sales">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="icon" href="icons/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+
+<style>
+/* Self-hosted so the app looks the same with no network. One variable file
+   covers every weight used below. */
+@font-face{font-family:'Bricolage Grotesque';font-style:normal;font-weight:200 800;font-stretch:100%;font-display:swap;
+src:url('fonts/bricolage-grotesque-latin.woff2') format('woff2');
+unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+:root{--bg:#f6f4fa;--card:#fff;--ink:#2a2140;--mute:#7a7290;--line:#e4dff0;--acc:#c2306b;--onacc:#fff;--soft:#f3e3ec;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1a1526;--card:#251e36;--ink:#f1ecfa;--mute:#a79fc0;--line:#3a3150;--acc:#f0709f;--onacc:#1a1526;--soft:#3b2540}}
+:root[data-theme="dark"]{--bg:#1a1526;--card:#251e36;--ink:#f1ecfa;--mute:#a79fc0;--line:#3a3150;--acc:#f0709f;--onacc:#1a1526;--soft:#3b2540}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Bricolage Grotesque',system-ui,-apple-system,'Segoe UI',sans-serif}
+main{max-width:520px;margin:0 auto;padding:18px 16px 40px}
+h1{font-size:22px;font-weight:800;margin:0 0 14px}
+h2{font-size:15px;font-weight:600;margin:0 0 10px;color:var(--mute)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:14px}
+.row{display:flex;gap:8px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+button{font:inherit;color:inherit;cursor:pointer}
+.opt{border:1.5px solid var(--line);background:transparent;border-radius:10px;padding:10px 6px;text-align:center;font-weight:600}
+.opt small{display:block;font-weight:400;color:var(--mute);margin-top:2px}
+.opt.on{border-color:var(--acc);background:var(--soft)}
+.opt:focus-visible,.go:focus-visible,.step:focus-visible,.tab:focus-visible,.del:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.qty{display:flex;align-items:center;justify-content:space-between;margin:12px 0}
+.qty .ctl{display:flex;align-items:center;gap:14px}
+.step{width:40px;height:40px;border-radius:50%;border:1.5px solid var(--line);background:transparent;font-size:20px}
+.qty b{font-size:22px;min-width:28px;text-align:center}
+.total{display:flex;justify-content:space-between;font-weight:800;font-size:18px;margin:4px 0 12px}
+.go{width:100%;padding:13px;border:0;border-radius:12px;background:var(--acc);color:var(--onacc);font-weight:800;font-size:16px}
+.tabs{display:flex;gap:6px;margin-bottom:12px}
+.tab{flex:1;padding:8px;border:1.5px solid var(--line);background:transparent;border-radius:10px;font-weight:600}
+.tab.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.big{font-size:30px;font-weight:800}
+.kv{display:flex;justify-content:space-between;padding:6px 0;border-top:1px solid var(--line);font-size:14px}
+.kv span:first-child{color:var(--mute)}
+.sale{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 0;border-top:1px solid var(--line)}
+.sale .m{font-size:12px;color:var(--mute)}
+.del{border:0;background:transparent;color:var(--mute);font-size:20px;padding:4px 8px}
+.empty{color:var(--mute);font-size:14px;padding:6px 0}
+.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.tile{border:1px solid var(--line);border-radius:10px;padding:10px 6px;text-align:center}
+.tile b{display:block;font-size:26px;font-weight:800;line-height:1.1}
+.tile span{display:block;font-size:13px;font-weight:600}
+.tile small{display:block;font-size:12px;color:var(--mute);margin-top:2px}
+.tiles.pay{grid-template-columns:repeat(2,1fr)}
+.tiles.pay b{font-size:20px}
+.when{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+.when input{font:inherit;color:var(--ink);background:transparent;border:1.5px solid var(--line);border-radius:10px;padding:8px 10px;color-scheme:light dark}
+.rst{width:100%;padding:11px;border:1.5px solid var(--line);background:transparent;border-radius:12px;color:var(--mute);font-weight:600}
+.rst:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.warn{font-size:14px;margin-bottom:10px}
+.danger{background:var(--acc);color:var(--onacc);border-color:var(--acc)}
+/* Offered only when a newer build has been downloaded in the background. */
+.upd{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(14px + env(safe-area-inset-bottom,0px));z-index:9;
+display:none;align-items:center;gap:10px;max-width:calc(100% - 32px);
+background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:14px;box-shadow:0 8px 28px rgba(0,0,0,.18)}
+.upd.show{display:flex}
+.upd button{border:0;border-radius:9px;padding:7px 12px;background:var(--acc);color:var(--onacc);font-weight:700}
+.upd button:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+</style>
+</head>
+<body>
+<main>
+<h1>Sales tracker</h1>
+
+<section class="card" aria-label="New sale">
+  <h2>Product</h2>
+  <div class="grid3" id="products"></div>
+  <div class="qty"><h2 style="margin:0">Quantity</h2>
+    <div class="ctl"><button class="step" id="minus" aria-label="Decrease">−</button><b id="q">1</b><button class="step" id="plus" aria-label="Increase">+</button></div>
+  </div>
+  <h2>Paid by</h2>
+  <div class="grid2" id="methods" style="margin-bottom:12px"></div>
+  <div class="when"><h2 style="margin:0">Sale time</h2><input type="datetime-local" id="when" aria-label="Sale time"></div>
+  <div class="total"><span>Total</span><span id="tot"></span></div>
+  <button class="go" id="add">Add sale</button>
+</section>
+
+<section class="card" aria-label="Summary">
+  <div class="tabs" role="tablist">
+    <button class="tab on" data-r="today">Today</button>
+    <button class="tab" data-r="all">All time</button>
+  </div>
+  <div class="big" id="rev">Rp 0</div>
+  <div class="empty" id="cnt"></div>
+  <div id="byP"></div>
+  <div id="byM"></div>
+</section>
+
+<section class="card" aria-label="Recent sales">
+  <h2>Recent sales</h2>
+  <div id="list"></div>
+</section>
+
+<section aria-label="Reset">
+  <div id="reset"></div>
+</section>
+</main>
+
+<div class="upd" id="upd" role="status" aria-live="polite"><span>New version ready.</span><button id="reload" type="button">Reload</button></div>
+
+<script>
+const PRODUCTS=[{n:"Hua Tang",p:20000},{n:"Luo Luo",p:10000},{n:"Hua Luo",p:28000}];
+const METHODS=["QRIS","Transfer","Cash","Voucher"];
+const KEY="sales-tracker-v1";
+const rp=n=>"Rp "+n.toLocaleString("id-ID");
+let sales=[],prod=0,qty=1,method=0,range="today",when=null,confirmReset=false;
+const pad=n=>String(n).padStart(2,"0");
+const toLocal=d=>d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate())+"T"+pad(d.getHours())+":"+pad(d.getMinutes());
+try{sales=JSON.parse(localStorage.getItem(KEY))||[]}catch(e){sales=[]}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(sales))}catch(e){}}
+const $=id=>document.getElementById(id);
+const dayKey=t=>{const d=new Date(t);return d.getFullYear()+"-"+d.getMonth()+"-"+d.getDate()};
+function sel(){
+  $("products").innerHTML=PRODUCTS.map((x,i)=>`<button class="opt ${i===prod?"on":""}" data-i="${i}">${x.n}<small>${rp(x.p)}</small></button>`).join("");
+  $("methods").innerHTML=METHODS.map((x,i)=>`<button class="opt ${i===method?"on":""}" data-m="${i}">${x}</button>`).join("");
+  $("q").textContent=qty;
+  $("tot").textContent=rp(PRODUCTS[prod].p*qty);
+  $("when").value=when||toLocal(new Date());
+  $("reset").innerHTML=confirmReset
+    ?`<div class="warn">Delete all ${sales.length} sale${sales.length===1?"":"s"}? This can't be undone.</div><div class="grid2"><button class="rst danger" id="yes">Yes, delete all</button><button class="rst" id="no">Cancel</button></div>`
+    :`<button class="rst" id="ask">Reset all data</button>`;
+}
+function rows(title,map){
+  const e=Object.entries(map);
+  if(!e.length)return"";
+  return `<h2 style="margin:14px 0 4px">${title}</h2>`+e.map(([k,v])=>`<div class="kv"><span>${k} × ${v.q}</span><span>${rp(v.r)}</span></div>`).join("");
+}
+function render(){
+  sel();
+  const today=dayKey(Date.now());
+  const set=range==="today"?sales.filter(s=>dayKey(s.t)===today):sales;
+  const rev=set.reduce((a,s)=>a+s.price*s.q,0),items=set.reduce((a,s)=>a+s.q,0);
+  $("rev").textContent=rp(rev);
+  $("cnt").textContent=set.length?`${items} items in ${set.length} sale${set.length>1?"s":""}`:"No sales yet";
+  const bp={},bm={};
+  set.forEach(s=>{
+    (bp[s.p]=bp[s.p]||{q:0,r:0}).q+=s.q;bp[s.p].r+=s.price*s.q;
+    (bm[s.m]=bm[s.m]||{q:0,r:0}).q+=s.q;bm[s.m].r+=s.price*s.q;
+  });
+  $("byP").innerHTML=`<div class="tiles">`+PRODUCTS.map(x=>{const v=bp[x.n]||{q:0,r:0};return `<div class="tile"><span>${x.n}</span><b>${v.q}</b><small>sold · ${rp(v.r)}</small></div>`}).join("")+`</div>`;
+  $("byM").innerHTML=`<h2 style="margin:16px 0 0">Money by payment method</h2><div class="tiles pay">`+METHODS.map(x=>{const v=bm[x]||{q:0,r:0};return `<div class="tile"><span>${x}</span><b>${rp(v.r)}</b><small>${v.q} item${v.q===1?"":"s"}</small></div>`}).join("")+`</div>`;
+  document.querySelectorAll(".tab").forEach(b=>b.classList.toggle("on",b.dataset.r===range));
+  const recent=sales.slice().reverse().slice(0,30);
+  $("list").innerHTML=recent.length?recent.map(s=>{
+    const d=new Date(s.t);
+    return `<div class="sale"><div><div>${s.p} × ${s.q} · ${rp(s.price*s.q)}</div><div class="m"><b>${d.toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"})}</b>, ${d.toLocaleDateString("en-GB",{day:"numeric",month:"short"})} · ${s.m} · @${rp(s.price)}</div></div><button class="del" data-id="${s.id}" aria-label="Delete sale">×</button></div>`;
+  }).join(""):`<div class="empty">Add your first sale above.</div>`;
+}
+document.addEventListener("click",e=>{
+  const b=e.target.closest("button");if(!b)return;
+  if(b.dataset.i!==undefined){prod=+b.dataset.i}
+  else if(b.dataset.m!==undefined){method=+b.dataset.m}
+  else if(b.id==="plus"){qty=Math.min(qty+1,999)}
+  else if(b.id==="minus"){qty=Math.max(qty-1,1)}
+  else if(b.dataset.r){range=b.dataset.r}
+  else if(b.id==="add"){
+    const t=when?new Date(when).getTime():Date.now();
+    sales.push({id:Date.now(),t:isNaN(t)?Date.now():t,p:PRODUCTS[prod].n,price:PRODUCTS[prod].p,q:qty,m:METHODS[method]});
+    sales.sort((a,b)=>a.t-b.t);
+    save();qty=1;when=null;
+  }
+  else if(b.id==="ask"){confirmReset=true}
+  else if(b.id==="no"){confirmReset=false}
+  else if(b.id==="yes"){sales=[];save();confirmReset=false}
+  else if(b.dataset.id){sales=sales.filter(s=>String(s.id)!==b.dataset.id);save()}
+  render();
+});
+$("when").addEventListener("change",e=>{when=e.target.value||null});
+render();
+</script>
+
+<script>
+/* Offline shell. The service worker precaches every file this page needs, so
+   after one online visit the app opens with no network at all. */
+if("serviceWorker" in navigator){
+  let askedReload=false;
+  navigator.serviceWorker.addEventListener("controllerchange",()=>{if(askedReload)location.reload()});
+  window.addEventListener("load",()=>{
+    navigator.serviceWorker.register("sw.js",{scope:"./"}).then(reg=>{
+      const offer=()=>{
+        if(!reg.waiting||!navigator.serviceWorker.controller)return;
+        const bar=document.getElementById("upd");
+        bar.classList.add("show");
+        document.getElementById("reload").onclick=()=>{askedReload=true;reg.waiting.postMessage("skip-waiting")};
+      };
+      offer();
+      reg.addEventListener("updatefound",()=>{
+        const sw=reg.installing;
+        if(sw)sw.addEventListener("statechange",()=>{if(sw.state==="installed")offer()});
+      });
+    }).catch(()=>{});
+  });
+}
+/* Ask the browser not to evict the sales log when storage gets tight. */
+if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(()=>{});
+</script>
+</body>
+</html>

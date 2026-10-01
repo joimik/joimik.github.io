@@ -1,0 +1,4 @@
+# Files that live here for humans, not for the deployed site.
+README.md
+wrangler.toml
+.assetsignore
