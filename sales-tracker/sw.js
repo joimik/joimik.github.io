@@ -3,7 +3,7 @@
  * Bump VERSION whenever any file in ASSETS changes: browsers re-fetch this
  * script, spot the diff, install a fresh cache and the page offers a reload.
  */
-const VERSION = "2026-10-01.1";
+const VERSION = "2026-10-01.2";
 const CACHE = "sales-tracker-" + VERSION;
 const SHELL = new URL("index.html", self.location.href).href;
 const ASSETS = [
